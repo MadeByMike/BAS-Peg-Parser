@@ -1,0 +1,33 @@
+{
+  "name": "bas-peg-parser",
+  "version": "0.0.0",
+  "description": "A PEG-based parser for BAS sheets.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cgiffard/BAS-Peg-Parser.git"
+  },
+  "keywords": [
+    "bas",
+    "sheets",
+    "peg",
+    "parser",
+    "css"
+  ],
+  "author": "Christopher Giffard <christopher.giffard@cgiffard.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cgiffard/BAS-Peg-Parser/issues"
+  },
+  "homepage": "https://github.com/cgiffard/BAS-Peg-Parser",
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "chai": "^1.9.1"
+  },
+  "dependencies": {
+    "pegjs": "^0.8.0"
+  }
+}
