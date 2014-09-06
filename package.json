@@ -2,7 +2,7 @@
   "name": "bas-peg-parser",
   "version": "0.0.0",
   "description": "A PEG-based parser for BAS sheets.",
-  "main": "index.js",
+  "main": "lib/parser.js",
   "scripts": {
     "test": "mocha ./test"
   },

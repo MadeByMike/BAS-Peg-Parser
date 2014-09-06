@@ -1,0 +1,17 @@
+// A BAS sheet is made up of one or more rule-lists
+// or selectors, referred to in this grammar as blocks.
+sheet
+    = block*
+    
+// A block is a rule list or selector.
+block
+    = ruleList
+    / selector
+
+// A ruleList (only stubbed)
+ruleList
+    = "a"
+    
+// A selector (only stubbed)
+selector
+    = "a"
