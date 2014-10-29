@@ -1,91 +1,455 @@
-// A BAS sheet is made up of one or more rule-lists, selectors
-// or assertions, referred to collectively in this grammar as blocks.
-sheet
-    = block*
+/* BAS PEG!
+    Based on:
+    - https://github.com/dmajda/pegjs/blob/master/examples/css.pegjs
+    - http://www.w3.org/TR/CSS21/grammar.html
+    - http://www.w3.org/TR/2003/WD-css3-syntax-20030813/
+*/
 
-// Whitespace is a limited subset of non-printables for now.
-whitespace
-    = " "
-    / "\t"
-    / "\n"
-    / "\r"
+// Functions
 
-// A block is a rule list, selector, or an assertion.
+{
+  function extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+
+  function returnFlag(string) {
+    return (string === null) ? false : true;
+  }
+
+  function extractList(list, index) {
+    var result = [], i;
+
+    for (i = 0; i < list.length; i++) {
+      if (list[i][index] !== null) {
+        result.push(list[i][index]);
+      }
+    }
+
+    return result;
+  }
+
+  function buildList(first, rest, index) {
+    return (first !== null ? [first] : []).concat(extractList(rest, index));
+  }
+
+  function buildExpression(first, rest) {
+    var result = first, i;
+
+    for (i = 0; i < rest.length; i++) {
+      result = {
+        type:     "Expression",
+        operator: rest[i][0],
+        left:     result,
+        right:    rest[i][1]
+      };
+    }
+
+    return result;
+  }
+}
+
+start
+  = bas:bas { return bas; }
+
+bas
+  = annotations:annotation*
+    charset: (CHARSET_SYM STRING ";")? (S / CDO / CDC)*
+    rules: ((bas_ruleset) (CDO S* / CDC S*)*)*
+    assertions:(assertion*)? 
+    {
+      return {
+        charset:  extractOptional(charset, 1),
+        annotations: annotations,
+        ruleset:    extractList(rules, 0),
+        assertions:  {
+          type: "all",
+          conditions: null,
+          assertions: assertions,
+          ruleset: []
+        }
+      };
+    }
+
+operator
+  = "/" S* { return "/"; }
+  / "," S* { return ","; }
+
+bas_operator
+  = S* opp:("!=~" / "!=" / "=~" / "=" / ">=" / "<=" / ">" / "<" ) S* { return opp; }
+
+combinator
+  = "+" S* { return "+"; }
+  / ">" S* { return ">"; }
+
+property
+  = name:"$node" S* { return name; }
+  / name:"$this" S* { return name; }
+  / name:((function / IDENT) chained_prop*) S* { return name; }
+  / name:function S* { return name; }
+
+chained_prop 
+  = ("." part:(function / IDENT)) { return part}
+    
+bas_ruleset
+  = type:BAS_RULE_SYM S* conditions:condition_list? S* "{" S* 
+    assertions:(assertion*)?
+    rules:(block*)? S* "}" S* {
+    return {
+      type: type,
+      conditions: conditions,
+      assertions: assertions,
+      ruleset: rules
+    };
+  }
+
+condition_list
+  = first:condition rest:(S* condition)* { return buildList(first, rest, 1); }
+
+condition
+  =  comment* ("(" S* test:IDENT S* operator:bas_operator S* expr:expr S* ")") {
+    return {
+      test: test,
+      operator: operator,
+      exprpression: expr
+    }
+  }
+
+assertion 
+  = annotations:(annotation*) 
+    comment*
+    subject:property 
+    ':' S* 
+    negated:"!"? 
+    value:expr 
+     ";" S* {
+      return {
+        subject: subject,
+        value: value,
+        negated: returnFlag(negated)
+      };
+    }
+
 block
-    = ruleList
-    / selector
-    / assertion
+  = selectorsFirst:selector
+    selectorsRest:("," S* selector)*
+    "{" S*
+    assertionFirst:assertion?
+    assertionsRest:(";" S* assertion?)*
+    nested:block*
+    "}" S*
+    {
+      return {
+        selectors:    buildList(selectorsFirst, selectorsRest, 2),
+        assertions: buildList(assertionFirst, assertionsRest, 2),
+        block: nested
+      };
+    }
 
-openBlock
-    = whitespace* "{" whitespace*
-
-closeBlock
-    = whitespace* "{" whitespace*
-
-// Rule List
-ruleList
-    = definition:ruleListDefinition openBlock blocks:block* closeBlock
-    { return { 
-        kind:       definition.kind,
-        conditions: definition.conditions,
-        rules:      blocks
-    } }
-
-// The opening line and guard clause of a rule list
-ruleListDefinition
-    = ruleListDescriptor whitespace*
-
-ruleListDescriptor
-    = exclusiveRuleListDescriptor
-    / nonExclusiveRuleListDescriptor
-
-// Guard clause of a rule list with conditions
-exclusiveRuleListDescriptor
-    = "@page" conditions:ruleListCondition*
-    { return { "kind": "page", "conditions": conditions } }
-    / "@document" conditions:ruleListCondition*
-    { return { "kind": "document", "conditions": conditions } }
-
-// Descriptor for a rule list without conditions.
-nonExclusiveRuleListDescriptor
-    = "@all"
-    { return { "kind": "all", "conditions": [] } }
-
-// Defines an individual (test [operator] comparison) condition
-ruleListCondition
-    = openRuleListCondition test:ruleListConditionTest whitespace* operator:ruleListConditionOperator whitespace* comparison:ruleListConditionComparison closeRuleListCondition
-    { return {
-        "test":         test,
-        "operator":     operator,
-        "comparison":   comparison,
-        "line":         line,
-        "column":       column
-    } }
-
-// Character sequence for opening rule list conditions
-openRuleListCondition
-    = whitespace* "(" whitespace*
-
-// Character sequence for closing rule list conditions
-closeRuleListCondition
-    = whitespace* ")"
-
-// The rule list condition test
-ruleListConditionTest
-    = name:[a-zA-Z0-9\-\+]+
-    { return name.join("") }
-
-ruleListConditionOperator
-    = name:[a-zA-Z0-9\-\+]+
-    { return name.join("") }
-
-ruleListConditionComparison
-    = name:[a-zA-Z0-9\-\+]+
-    { return name.join("") }
-
-// A selector (only stubbed)
 selector
-    = "a"
+  = left:simple_selector S* combinator:combinator right:selector {
+      return {
+        type:       "Selector",
+        combinator: combinator,
+        left:       left,
+        right:      right
+      };
+    }
+  / left:simple_selector S+ right:selector {
+      return {
+        type:       "Selector",
+        combinator: " ",
+        left:       left,
+        right:      right
+      };
+    }
+  / selector:simple_selector S* { return selector; }
 
-assertion
-    = "foo"
+simple_selector
+  = element:element_name qualifiers:(id / class / attrib / pseudo)* {
+      return {
+        type:       "SimpleSelector",
+        element:    element,
+        qualifiers: qualifiers
+      };
+    }
+  / qualifiers:(id / class / attrib / pseudo)+ {
+      return {
+        type:       "SimpleSelector",
+        element:    "*",
+        qualifiers: qualifiers
+      };
+    }
+  / special:("$this" / "$node") {
+      return {
+        type:       "ScopingSelector",
+        element:    null,
+        qualifiers: special
+      };
+    }
+  / interpolation:interpolation
+    {
+      return {
+        type:       "InterpolationSelector",
+        element:    null,
+        interpolation:interpolation
+      };
+    }
+  
+interpolation
+  = "$(" S*
+    name:FUNCTION S* params:((IDENT S*) / (selector S*))? ")" S*
+    ")$"
+    {
+      return {
+        name: name,
+        params: params
+      };
+    }
+          
+id
+  = id:HASH { return { type: "IDSelector", id: id }; }
+
+class
+  = "." class_:IDENT { return { type: "ClassSelector", class: class_ }; }
+
+element_name
+  = IDENT
+  / "*"
+
+attrib
+  = "[" S*
+    attribute:IDENT S* operatorAndValue:(("=" / INCLUDES / DASHMATCH) S* (IDENT / STRING / interpolation) S*)?
+    "]"
+    {
+      return {
+        type:      "AttributeSelector",
+        attribute: attribute,
+        operator:  extractOptional(operatorAndValue, 0),
+        value:     extractOptional(operatorAndValue, 2)
+      };
+    }
+
+pseudo
+  = ":"
+    value:(
+        name:FUNCTION S* params:((IDENT S*) / (selector S*))? ")" {
+          return {
+            type:   "Function",
+            name:   name,
+            params: params !== null ? [params[0]] : []
+          };
+        }
+      / IDENT
+    )
+    { return { type: "PseudoSelector", value: value }; }
+
+expr
+  = first:term rest:(operator? term)* { return buildExpression(first, rest); }
+
+term
+  = quantity:(PERCENTAGE / LENGTH / EMS / EXS / ANGLE / TIME / FREQ / NUMBER)
+    S*
+    {
+      return {
+        type:  "Quantity",
+        value: quantity.value,
+        unit:  quantity.unit
+      };
+    }
+  / value: interpolation { return { type: "Interpolation", value: value }; }
+  / value: STRING S* { return { type: "String", value: value }; }
+  / value: URI S*    { return { type: "URI", value: value }; }
+  / value: REGEX S*  { return { type: "RegEx", value: value }; }
+  / function
+  / hexcolor
+  / value: IDENT S*  { return { type: "Ident",  value: value }; }
+
+function
+  = name:FUNCTION S* params:expr ")" S* {
+      return { type: "Function", name: name, params: params };
+    }
+
+hexcolor
+  = value:HASH S* { return { type: "Hexcolor", value: value }; }
+
+h
+  = [0-9a-f]i
+
+nonascii
+  = [\x80-\uFFFF]
+
+unicode
+  = "\\" digits:$(h h? h? h? h? h?) ("\r\n" / [ \t\r\n\f])? {
+      return String.fromCharCode(parseInt(digits, 16));
+    }
+
+escape
+  = unicode
+  / "\\" ch:[^\r\n\f0-9a-f]i { return ch; }
+
+nmstart
+  = [_a-z]i
+  / nonascii
+  / escape
+
+nmchar
+  = [_a-z0-9-]i
+  / nonascii
+  / escape
+
+string1
+  = '"' chars:([^\n\r\f\\"] / "\\" nl:nl { return ""; } / escape)* '"' {
+      return chars.join("");
+    }
+
+string2
+  = "'" chars:([^\n\r\f\\'] / "\\" nl:nl { return ""; } / escape)* "'" {
+      return chars.join("");
+    }
+
+comment
+  = chars:("/*" [^*]* "*"+ ([^/*] [^*]* "*"+)* "/") {
+    return chars.join("");
+  }
+
+annotation
+    = chars:("/*@" [^*]* "*"+ ([^/*] [^*]* "*"+)* "/") {
+      return chars.join(" ");
+    }
+
+ident
+  = prefix:$"-"? start:nmstart chars:nmchar* {
+      return prefix + start + chars.join("");
+    }
+
+name
+  = chars:nmchar+ { return chars.join(""); }
+
+num
+  = [+-]? ([0-9]+ / [0-9]* "." [0-9]+) ("e" [+-]? [0-9]+)? {
+      return parseFloat(text());
+    }
+
+string
+  = string1
+  / string2
+
+url
+  = chars:([!#$%&*-\[\]-~] / nonascii / escape)* { return chars.join(""); }
+
+s
+  = [ \t\r\n\f]+
+
+w
+  = s?
+
+nl
+  = "\n"
+  / "\r\n"
+  / "\r"
+  / "\f"
+
+A  = "a"i / "\\" "0"? "0"? "0"? "0"? [\x41\x61] ("\r\n" / [ \t\r\n\f])? { return "a"; }
+C  = "c"i / "\\" "0"? "0"? "0"? "0"? [\x43\x63] ("\r\n" / [ \t\r\n\f])? { return "c"; }
+D  = "d"i / "\\" "0"? "0"? "0"? "0"? [\x44\x64] ("\r\n" / [ \t\r\n\f])? { return "d"; }
+E  = "e"i / "\\" "0"? "0"? "0"? "0"? [\x45\x65] ("\r\n" / [ \t\r\n\f])? { return "e"; }
+G  = "g"i / "\\" "0"? "0"? "0"? "0"? [\x47\x67] ("\r\n" / [ \t\r\n\f])? / "\\g"i { return "g"; }
+H  = "h"i / "\\" "0"? "0"? "0"? "0"? [\x48\x68] ("\r\n" / [ \t\r\n\f])? / "\\h"i { return "h"; }
+I  = "i"i / "\\" "0"? "0"? "0"? "0"? [\x49\x69] ("\r\n" / [ \t\r\n\f])? / "\\i"i { return "i"; }
+K  = "k"i / "\\" "0"? "0"? "0"? "0"? [\x4b\x6b] ("\r\n" / [ \t\r\n\f])? / "\\k"i { return "k"; }
+L  = "l"i / "\\" "0"? "0"? "0"? "0"? [\x4c\x6c] ("\r\n" / [ \t\r\n\f])? / "\\l"i { return "l"; }
+M  = "m"i / "\\" "0"? "0"? "0"? "0"? [\x4d\x6d] ("\r\n" / [ \t\r\n\f])? / "\\m"i { return "m"; }
+N  = "n"i / "\\" "0"? "0"? "0"? "0"? [\x4e\x6e] ("\r\n" / [ \t\r\n\f])? / "\\n"i { return "n"; }
+O  = "o"i / "\\" "0"? "0"? "0"? "0"? [\x4f\x6f] ("\r\n" / [ \t\r\n\f])? / "\\o"i { return "o"; }
+P  = "p"i / "\\" "0"? "0"? "0"? "0"? [\x50\x70] ("\r\n" / [ \t\r\n\f])? / "\\p"i { return "p"; }
+R  = "r"i / "\\" "0"? "0"? "0"? "0"? [\x52\x72] ("\r\n" / [ \t\r\n\f])? / "\\r"i { return "r"; }
+S_ = "s"i / "\\" "0"? "0"? "0"? "0"? [\x53\x73] ("\r\n" / [ \t\r\n\f])? / "\\s"i { return "s"; }
+T  = "t"i / "\\" "0"? "0"? "0"? "0"? [\x54\x74] ("\r\n" / [ \t\r\n\f])? / "\\t"i { return "t"; }
+U  = "u"i / "\\" "0"? "0"? "0"? "0"? [\x55\x75] ("\r\n" / [ \t\r\n\f])? / "\\u"i { return "u"; }
+X  = "x"i / "\\" "0"? "0"? "0"? "0"? [\x58\x78] ("\r\n" / [ \t\r\n\f])? / "\\x"i { return "x"; }
+Z  = "z"i / "\\" "0"? "0"? "0"? "0"? [\x5a\x7a] ("\r\n" / [ \t\r\n\f])? / "\\z"i { return "z"; }
+
+/* Tokens */
+
+S "whitespace"
+  = comment* s
+
+CDO "<!--"
+  = comment* "<!--"
+
+CDC "-->"
+  = comment* "-->"
+
+INCLUDES "~="
+  = comment* "~="
+
+DASHMATCH "|="
+  = comment* "|="
+
+STRING "string"
+  = comment* string:string { return string; }
+
+IDENT "identifier"
+  = comment* ident:ident { return ident; }
+
+HASH "hash"
+  = comment* "#" name:name { return "#" + name; }
+
+BAS_RULE_SYM
+  = comment* "@" P A G E { return "page"; }
+  / comment* "@" A L L { return "all"; }
+
+CHARSET_SYM "@charset"
+  = "@charset "
+
+/* We use |s| instead of |w| here to avoid infinite recursion. */
+IMPORTANT_SYM "!important"
+  = comment* "!" (s / comment)* I M P O R T A N T
+
+EMS "length"
+  = comment* value:num E M { return { value: value, unit: "em" }; }
+
+EXS "length"
+  = comment* value:num E X { return { value: value, unit: "ex" }; }
+
+LENGTH "length"
+  = comment* value:num P X { return { value: value, unit: "px" }; }
+  / comment* value:num C M { return { value: value, unit: "cm" }; }
+  / comment* value:num M M { return { value: value, unit: "mm" }; }
+  / comment* value:num I N { return { value: value, unit: "in" }; }
+  / comment* value:num P T { return { value: value, unit: "pt" }; }
+  / comment* value:num P C { return { value: value, unit: "pc" }; }
+
+ANGLE "angle"
+  = comment* value:num D E G   { return { value: value, unit: "deg"  }; }
+  / comment* value:num R A D   { return { value: value, unit: "rad"  }; }
+  / comment* value:num G R A D { return { value: value, unit: "grad" }; }
+
+TIME "time"
+  = comment* value:num M S_ { return { value: value, unit: "ms" }; }
+  / comment* value:num S_   { return { value: value, unit: "s"  }; }
+
+FREQ "frequency"
+  = comment* value:num H Z   { return { value: value, unit: "hz" }; }
+  / comment* value:num K H Z { return { value: value, unit: "kh" }; }
+
+PERCENTAGE "percentage"
+  = comment* value:num "%" { return { value: value, unit: "%" }; }
+
+NUMBER "number"
+  = comment* value:num { return { value: value, unit: null }; }
+
+URI "uri"
+  = comment* U R L "("i w url:string w ")" { return url; }
+  / comment* U R L "("i w url:url w ")"    { return url; }
+
+REGEX
+  = comment* "/" chars:("\\/" / [^/])* "/" modifiers:([img]? [img]? [img]?) {
+    return {
+      pattern: chars.join(""),
+      modifiers: modifiers.join("")
+    }
+  }
+
+FUNCTION "function"
+  = comment* name:(ident ("." ident)*) S* "(" { return name.join("").replace(/,/g, ''); }

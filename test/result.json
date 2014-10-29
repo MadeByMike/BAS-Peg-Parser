@@ -1,0 +1,780 @@
+// rulesets.bas:
+
+
+{
+  "charset": null,
+  "annotations": [],
+  "ruleset": [
+    {
+      "type": "page",
+      "conditions": null,
+      "assertions": [],
+      "ruleset": []
+    },
+    {
+      "type": "all",
+      "conditions": null,
+      "assertions": [],
+      "ruleset": []
+    },
+    {
+      "type": "page",
+      "conditions": [
+        {
+          "test": "status-code",
+          "operator": "=",
+          "exprpression": {
+            "type": "Quantity",
+            "value": 200,
+            "unit": null
+          }
+        }
+      ],
+      "assertions": [],
+      "ruleset": []
+    },
+    {
+      "type": "page",
+      "conditions": [
+        {
+          "test": "content-type",
+          "operator": "=~",
+          "exprpression": {
+            "type": "RegEx",
+            "value": {
+              "pattern": "^text\\/html",
+              "modifiers": "i"
+            }
+          }
+        },
+        {
+          "test": "status-code",
+          "operator": "=",
+          "exprpression": {
+            "type": "Quantity",
+            "value": 200,
+            "unit": null
+          }
+        }
+      ],
+      "assertions": [],
+      "ruleset": []
+    }
+  ],
+  "assertions": {
+    "type": "all",
+    "conditions": null,
+    "assertions": [
+      {
+        "subject": [
+          "attribute",
+          []
+        ],
+        "value": {
+          "type": "Ident",
+          "value": "true"
+        },
+        "negated": false
+      }
+    ],
+    "ruleset": []
+  }
+}
+
+// Selectors:
+
+{
+  "charset": null,
+  "annotations": [],
+  "ruleset": [
+    {
+      "type": "all",
+      "conditions": null,
+      "assertions": [],
+      "ruleset": [
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "ClassSelector",
+                  "class": "simple"
+                }
+              ]
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "PseudoSelector",
+                  "value": "psudo"
+                }
+              ]
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "ClassSelector",
+                  "class": "element"
+                },
+                {
+                  "type": "PseudoSelector",
+                  "value": "psudo"
+                },
+                {
+                  "type": "PseudoSelector",
+                  "value": "psudo"
+                }
+              ]
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "ClassSelector",
+                  "class": "multi"
+                }
+              ]
+            },
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "ClassSelector",
+                  "class": "selectors"
+                }
+              ]
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "Selector",
+              "combinator": ">",
+              "left": {
+                "type": "SimpleSelector",
+                "element": "*",
+                "qualifiers": [
+                  {
+                    "type": "ClassSelector",
+                    "class": "complex-selectors"
+                  }
+                ]
+              },
+              "right": {
+                "type": "Selector",
+                "combinator": "+",
+                "left": {
+                  "type": "SimpleSelector",
+                  "element": "*",
+                  "qualifiers": [
+                    {
+                      "type": "IDSelector",
+                      "id": "#complex"
+                    },
+                    {
+                      "type": "AttributeSelector",
+                      "attribute": "attr",
+                      "operator": null,
+                      "value": null
+                    }
+                  ]
+                },
+                "right": {
+                  "type": "SimpleSelector",
+                  "element": "*",
+                  "qualifiers": [
+                    {
+                      "type": "ClassSelector",
+                      "class": "end"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h2",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [],
+          "block": [
+            {
+              "selectors": [
+                {
+                  "type": "SimpleSelector",
+                  "element": "h1",
+                  "qualifiers": []
+                }
+              ],
+              "assertions": [],
+              "block": []
+            }
+          ]
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "*",
+              "qualifiers": [
+                {
+                  "type": "IDSelector",
+                  "id": "#content"
+                }
+              ]
+            }
+          ],
+          "assertions": [],
+          "block": [
+            {
+              "selectors": [
+                {
+                  "type": "Selector",
+                  "combinator": " ",
+                  "left": {
+                    "type": "ScopingSelector",
+                    "element": null,
+                    "qualifiers": "$this"
+                  },
+                  "right": {
+                    "type": "SimpleSelector",
+                    "element": "b",
+                    "qualifiers": []
+                  }
+                }
+              ],
+              "assertions": [],
+              "block": []
+            }
+          ]
+        },
+        {
+          "selectors": [
+            {
+              "type": "Selector",
+              "combinator": " ",
+              "left": {
+                "type": "SimpleSelector",
+                "element": "*",
+                "qualifiers": [
+                  {
+                    "type": "ClassSelector",
+                    "class": "content"
+                  }
+                ]
+              },
+              "right": {
+                "type": "SimpleSelector",
+                "element": "header",
+                "qualifiers": []
+              }
+            }
+          ],
+          "assertions": [],
+          "block": [
+            {
+              "selectors": [
+                {
+                  "type": "Selector",
+                  "combinator": " ",
+                  "left": {
+                    "type": "ScopingSelector",
+                    "element": null,
+                    "qualifiers": "$node"
+                  },
+                  "right": {
+                    "type": "SimpleSelector",
+                    "element": "h3",
+                    "qualifiers": []
+                  }
+                }
+              ],
+              "assertions": [],
+              "block": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assertions": {
+    "type": "all",
+    "conditions": null,
+    "assertions": [],
+    "ruleset": []
+  }
+}
+
+// Annotations:
+
+{
+  "charset": null,
+  "annotations": [],
+  "ruleset": [
+    {
+      "type": "all",
+      "conditions": null,
+      "assertions": [
+        {
+          "subject": [
+            "assertion",
+            []
+          ],
+          "value": {
+            "type": "Ident",
+            "value": "true"
+          },
+          "negated": false
+        }
+      ],
+      "ruleset": [
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h1",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h1",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h1",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h1",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [],
+          "block": []
+        }
+      ]
+    }
+  ],
+  "assertions": {
+    "type": "all",
+    "conditions": null,
+    "assertions": [],
+    "ruleset": []
+  }
+}
+
+// Interpolation:
+
+{
+  "charset": null,
+  "annotations": [],
+  "ruleset": [
+    {
+      "type": "all",
+      "conditions": null,
+      "assertions": [],
+      "ruleset": [
+        {
+          "selectors": [
+            {
+              "type": "Selector",
+              "combinator": " ",
+              "left": {
+                "type": "ScopingSelector",
+                "element": null,
+                "qualifiers": "$this"
+              },
+              "right": {
+                "type": "SimpleSelector",
+                "element": "*",
+                "qualifiers": [
+                  {
+                    "type": "AttributeSelector",
+                    "attribute": "aria-describedby",
+                    "operator": null,
+                    "value": null
+                  }
+                ]
+              }
+            }
+          ],
+          "assertions": [],
+          "block": [
+            {
+              "selectors": [
+                {
+                  "type": "SimpleSelector",
+                  "element": "*",
+                  "qualifiers": [
+                    {
+                      "type": "AttributeSelector",
+                      "attribute": "id",
+                      "operator": "=",
+                      "value": {
+                        "name": "attribute",
+                        "params": [
+                          "aria-describedby",
+                          []
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ],
+              "assertions": [],
+              "block": []
+            }
+          ]
+        },
+        {
+          "selectors": [
+            {
+              "type": "InterpolationSelector",
+              "element": null,
+              "interpolation": {
+                "name": "attribute",
+                "params": [
+                  "aria-describedby",
+                  []
+                ]
+              }
+            }
+          ],
+          "assertions": [],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "SimpleSelector",
+              "element": "h1",
+              "qualifiers": []
+            }
+          ],
+          "assertions": [
+            {
+              "subject": [
+                "text",
+                []
+              ],
+              "value": {
+                "type": "Function",
+                "name": "shorter-than",
+                "params": {
+                  "type": "Interpolation",
+                  "value": {
+                    "name": "attribute",
+                    "params": [
+                      "data-length",
+                      []
+                    ]
+                  }
+                }
+              },
+              "negated": false
+            }
+          ],
+          "block": []
+        },
+        {
+          "selectors": [
+            {
+              "type": "Selector",
+              "combinator": " ",
+              "left": {
+                "type": "SimpleSelector",
+                "element": "header",
+                "qualifiers": []
+              },
+              "right": {
+                "type": "SimpleSelector",
+                "element": "*",
+                "qualifiers": [
+                  {
+                    "type": "ClassSelector",
+                    "class": "description"
+                  }
+                ]
+              }
+            }
+          ],
+          "assertions": [
+            {
+              "subject": [
+                "text",
+                []
+              ],
+              "value": {
+                "type": "Interpolation",
+                "value": {
+                  "name": "attribute",
+                  "params": [
+                    "data-description",
+                    []
+                  ]
+                }
+              },
+              "negated": false
+            }
+          ],
+          "block": []
+        }
+      ]
+    }
+  ],
+  "assertions": {
+    "type": "all",
+    "conditions": null,
+    "assertions": [],
+    "ruleset": []
+  }
+}
+
+// Assertions:
+
+{
+  "charset": null,
+  "annotations": [],
+  "ruleset": [],
+  "assertions": {
+    "type": "all",
+    "conditions": null,
+    "assertions": [
+      {
+        "subject": [
+          "simple",
+          []
+        ],
+        "value": {
+          "type": "Ident",
+          "value": "assertion"
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          "style",
+          []
+        ],
+        "value": {
+          "type": "Function",
+          "name": "contains",
+          "params": {
+            "type": "String",
+            "value": "font-family"
+          }
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          {
+            "type": "Function",
+            "name": "attribute",
+            "params": {
+              "type": "Ident",
+              "value": "alt"
+            }
+          },
+          []
+        ],
+        "value": {
+          "type": "Ident",
+          "value": "true"
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          "title",
+          []
+        ],
+        "value": {
+          "type": "RegEx",
+          "value": {
+            "pattern": "github",
+            "modifiers": "i"
+          }
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          {
+            "type": "Function",
+            "name": "attribute",
+            "params": {
+              "type": "Ident",
+              "value": "alt"
+            }
+          },
+          [
+            "flesch-kincaid-reading-ease"
+          ]
+        ],
+        "value": {
+          "type": "Function",
+          "name": "gte",
+          "params": {
+            "type": "Quantity",
+            "value": 80,
+            "unit": null
+          }
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          {
+            "type": "Function",
+            "name": "text.rot13.rot13",
+            "params": {
+              "type": "Quantity",
+              "value": 1,
+              "unit": null
+            }
+          },
+          [
+            "rot13"
+          ]
+        ],
+        "value": {
+          "type": "Ident",
+          "value": "hypothetical"
+        },
+        "negated": false
+      },
+      {
+        "subject": [
+          "title",
+          []
+        ],
+        "value": {
+          "type": "RegEx",
+          "value": {
+            "pattern": "github",
+            "modifiers": "i"
+          }
+        },
+        "negated": true
+      },
+      {
+        "subject": [
+          "title",
+          []
+        ],
+        "value": {
+          "type": "Function",
+          "name": "contains",
+          "params": {
+            "type": "String",
+            "value": "github"
+          }
+        },
+        "negated": true
+      },
+      {
+        "subject": [
+          {
+            "type": "Function",
+            "name": "attribute",
+            "params": {
+              "type": "Ident",
+              "value": "user-id"
+            }
+          },
+          []
+        ],
+        "value": {
+          "type": "Expression",
+          "operator": ",",
+          "left": {
+            "type": "Expression",
+            "operator": ",",
+            "left": {
+              "type": "Ident",
+              "value": "exists"
+            },
+            "right": {
+              "type": "Function",
+              "name": "longer-than",
+              "params": {
+                "type": "Quantity",
+                "value": 1,
+                "unit": null
+              }
+            }
+          },
+          "right": {
+            "type": "Function",
+            "name": "gte",
+            "params": {
+              "type": "Quantity",
+              "value": 1,
+              "unit": null
+            }
+          }
+        },
+        "negated": false
+      }
+    ],
+    "ruleset": []
+  }
+}
+

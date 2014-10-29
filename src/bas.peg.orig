@@ -1,0 +1,91 @@
+// A BAS sheet is made up of one or more rule-lists, selectors
+// or assertions, referred to collectively in this grammar as blocks.
+sheet
+    = block*
+
+// Whitespace is a limited subset of non-printables for now.
+whitespace
+    = " "
+    / "\t"
+    / "\n"
+    / "\r"
+
+// A block is a rule list, selector, or an assertion.
+block
+    = ruleList
+    / selector
+    / assertion
+
+openBlock
+    = whitespace* "{" whitespace*
+
+closeBlock
+    = whitespace* "{" whitespace*
+
+// Rule List
+ruleList
+    = definition:ruleListDefinition openBlock blocks:block* closeBlock
+    { return { 
+        kind:       definition.kind,
+        conditions: definition.conditions,
+        rules:      blocks
+    } }
+
+// The opening line and guard clause of a rule list
+ruleListDefinition
+    = ruleListDescriptor whitespace*
+
+ruleListDescriptor
+    = exclusiveRuleListDescriptor
+    / nonExclusiveRuleListDescriptor
+
+// Guard clause of a rule list with conditions
+exclusiveRuleListDescriptor
+    = "@page" conditions:ruleListCondition*
+    { return { "kind": "page", "conditions": conditions } }
+    / "@document" conditions:ruleListCondition*
+    { return { "kind": "document", "conditions": conditions } }
+
+// Descriptor for a rule list without conditions.
+nonExclusiveRuleListDescriptor
+    = "@all"
+    { return { "kind": "all", "conditions": [] } }
+
+// Defines an individual (test [operator] comparison) condition
+ruleListCondition
+    = openRuleListCondition test:ruleListConditionTest whitespace* operator:ruleListConditionOperator whitespace* comparison:ruleListConditionComparison closeRuleListCondition
+    { return {
+        "test":         test,
+        "operator":     operator,
+        "comparison":   comparison,
+        "line":         line,
+        "column":       column
+    } }
+
+// Character sequence for opening rule list conditions
+openRuleListCondition
+    = whitespace* "(" whitespace*
+
+// Character sequence for closing rule list conditions
+closeRuleListCondition
+    = whitespace* ")"
+
+// The rule list condition test
+ruleListConditionTest
+    = name:[a-zA-Z0-9\-\+]+
+    { return name.join("") }
+
+ruleListConditionOperator
+    = name:[a-zA-Z0-9\-\+]+
+    { return name.join("") }
+
+ruleListConditionComparison
+    = name:[a-zA-Z0-9\-\+]+
+    { return name.join("") }
+
+// A selector (only stubbed)
+selector
+    = "a"
+
+assertion
+    = "foo"
